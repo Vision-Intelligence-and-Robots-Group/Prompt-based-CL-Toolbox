@@ -14,6 +14,7 @@ def train(args):
     setup_logs(args)
     init_distributed_mode(args)
     _set_random(args)
+    _print_args(args)
     _train(args)
 
 def _train(args):
@@ -66,9 +67,9 @@ def init_distributed_mode(args):
     torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
                                          world_size=args.world_size, rank=args.local_rank)
     torch.distributed.barrier()
-    setup_for_distributed(args.local_rank == 0)
+    setup_for_distributed(args.local_rank)
 
-def setup_for_distributed(is_master):
+def setup_for_distributed(local_rank):
     """
     This function disables printing when not in master process
     """
@@ -77,12 +78,17 @@ def setup_for_distributed(is_master):
 
     def print(*args, **kwargs):
         force = kwargs.pop('force', False)
-        if is_master or force:
+        if local_rank == 0 or force:
             builtin_print(*args, **kwargs)
         else:
             logging.disable(logging.CRITICAL)
 
     __builtin__.print = print
+    logging.basicConfig(level=logging.INFO if local_rank in [-1, 0] else logging.WARN)
+
+def _print_args(args):
+    for arg in vars(args):
+        logging.info('{}: {}'.format(arg, getattr(args, arg)))
 
 def _set_random(args):
     torch.manual_seed(args.seed)
