@@ -32,6 +32,6 @@ python -m torch.distributed.launch \
 #### CDDB
 | Methods       | Final_acc@1 | Reproduce Official Code |
 | -----         | ----------- | ----------------------- |
-| S-Prompt_cip  | 67.81       | 68.41                   |
-| S-Prompt_clip | 84.88       | 85.5                    |
+| S-Prompt_sip  | 67.81       | 68.41                   |
+| S-Prompt_slip | 84.88       | 85.5                    |
   
