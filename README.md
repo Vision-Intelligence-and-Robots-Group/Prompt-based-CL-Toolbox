@@ -36,8 +36,9 @@ python -m torch.distributed.launch \
 | S-Prompt_slip | 84.88       | 85.5                    |
 
 # Acknowledgement
-[Official Jax Implementation of L2P and DualP](https://github.com/google-research/l2p)
-[Reimplemented in PyTorch of L2p](https://github.com/JH-LEE-KR/l2p-pytorch)
-[Reimplemented in PyTorch of DualP](https://github.com/JH-LEE-KR/dualprompt-pytorch)
-[Official implementation of S-prompts](https://github.com/Vision-Intelligence-and-Robots-Group/S-Prompts)
+[Official Jax Implementation of L2P and DualP](https://github.com/google-research/l2p)  
+[Reimplemented in PyTorch of L2p](https://github.com/JH-LEE-KR/l2p-pytorch)  
+[Reimplemented in PyTorch of DualP](https://github.com/JH-LEE-KR/dualprompt-pytorch)  
+[Official implementation of S-prompts](https://github.com/Vision-Intelligence-and-Robots-Group/S-Prompts)  
+[PyCIL: A Python Toolbox for Class-Incremental Learning](https://github.com/G-U-N/PyCIL)  
 
