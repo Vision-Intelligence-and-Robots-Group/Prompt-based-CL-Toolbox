@@ -1,5 +1,5 @@
-# Prompt-based Continual Learning Toolbox
-This repository contains awesome prompt-based continual learning methods:
+# Prompt-based Incremental Learning Toolbox
+This repository contains awesome prompt-based incremental learning methods:
 
 **L2P**: Wang, Zifeng, et al. "[Learning to prompt for continual learning.](https://arxiv.org/pdf/2112.08654.pdf)" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.  
 **DualPrompt**: Wang, Zifeng, et al. "[Dualprompt: Complementary prompting for rehearsal-free continual learning.](https://arxiv.org/pdf/2204.04799.pdf)" Computer Vision–ECCV 2022: 17th European Conference, Tel Aviv, Israel, October 23–27, 2022, Proceedings, Part XXVI. Cham: Springer Nature Switzerland, 2022.  
