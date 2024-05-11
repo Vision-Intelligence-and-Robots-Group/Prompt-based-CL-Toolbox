@@ -84,95 +84,6 @@ class iCIFAR100_vit(iData):
         self.train_data, self.train_targets = train_dataset.data, np.array(train_dataset.targets)
         self.test_data, self.test_targets = test_dataset.data, np.array(test_dataset.targets)
 
-class i5Datasets_vit(iData):
-    use_path = False
-    def __init__(self, args):
-        self.args = args
-        class_order = np.arange(50).tolist()
-        self.class_order = class_order
-
-    def download_data(self):
-        img_size=64
-        train_dataset = datasets.cifar.CIFAR10(self.args.data_path, train=True, download=True)
-        test_dataset = datasets.cifar.CIFAR10(self.args.data_path, train=False, download=True)
-
-        trainlist = []
-        testlist = []
-        train_label_list = []
-        test_label_list = []
-
-        # cifar10
-        cifar10_train_dataset = datasets.cifar.CIFAR10(self.args.data_path, train=True, download=True)
-        cifar10_test_dataset = datasets.cifar.CIFAR10(self.args.data_path, train=False, download=True)
-        for img, target in zip(cifar10_train_dataset.data, cifar10_train_dataset.targets):
-            trainlist.append(np.array(Image.fromarray(img).resize((img_size, img_size))))
-            train_label_list.append(target)
-        for img, target in zip(cifar10_test_dataset.data, cifar10_test_dataset.targets):
-            testlist.append(np.array(Image.fromarray(img).resize((img_size, img_size))))
-            test_label_list.append(target)
-
-        # MNIST
-        minist_train_dataset = datasets.MNIST(self.args.data_path, train=True, download=True)
-        minist_test_dataset = datasets.MNIST(self.args.data_path, train=False, download=True)
-        for img, target in zip(minist_train_dataset.data.numpy(), minist_train_dataset.targets.numpy()):
-            trainlist.append(np.array(Image.fromarray(img).resize((img_size, img_size)).convert('RGB')))
-            train_label_list.append(target+10)
-        for img, target in zip(minist_test_dataset.data.numpy(), minist_test_dataset.targets.numpy()):
-            testlist.append(np.array(Image.fromarray(img).resize((img_size, img_size)).convert('RGB')))
-            test_label_list.append(target+10)
-
-        # notMNIST
-        classes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
-        tarin_dir = self.args.data_path
-        test_dir = self.args.data_path
-        for idx, cls in enumerate(classes):
-            image_files = os.listdir(os.path.join(tarin_dir, cls))
-            for img_path in image_files:
-                try:
-                    image = np.array(Image.open(os.path.join(tarin_dir,"notMNIST_large", cls, img_path)).resize((img_size, img_size)).convert('RGB'))
-                    trainlist.append(image)
-                    train_label_list.append(idx+20)
-                except:
-                    print(os.path.join(tarin_dir,"notMNIST_large", cls, img_path))
-            image_files = os.listdir(os.path.join(test_dir,"notMNIST_small", cls))
-            for img_path in image_files:
-                try:
-                    image = np.array(Image.open(os.path.join(test_dir,"notMNIST_small", cls, img_path)).resize((img_size, img_size)).convert('RGB'))
-                    testlist.append(image)
-                    test_label_list.append(idx+20)
-                except:
-                    print(os.path.join(test_dir,"notMNIST_small", cls, img_path))
-
-
-        # Fashion-MNIST
-        fminist_train_dataset = datasets.FashionMNIST(self.args.data_path, train=True, download=True)
-        fminist_test_dataset = datasets.FashionMNIST(self.args.data_path, train=False, download=True)
-        for img, target in zip(fminist_train_dataset.data.numpy(), fminist_train_dataset.targets.numpy()):
-            trainlist.append(np.array(Image.fromarray(img).resize((img_size, img_size)).convert('RGB')))
-            train_label_list.append(target+30)
-        for img, target in zip(fminist_test_dataset.data.numpy(), fminist_test_dataset.targets.numpy()):
-            testlist.append(np.array(Image.fromarray(img).resize((img_size, img_size)).convert('RGB')))
-            test_label_list.append(target+30)
-
-        # SVHN
-        svhn_train_dataset = datasets.SVHN(self.args.data_path, split='train', download=True)
-        svhn_test_dataset = datasets.SVHN(self.args.data_path, split='test', download=True)
-        for img, target in zip(svhn_train_dataset.data, svhn_train_dataset.labels):
-            trainlist.append(np.array(Image.fromarray(img.transpose(1,2,0)).resize((img_size, img_size))))
-            train_label_list.append(target+40)
-        for img, target in zip(svhn_test_dataset.data, svhn_test_dataset.labels):
-            testlist.append(np.array(Image.fromarray(img.transpose(1,2,0)).resize((img_size, img_size))))
-            test_label_list.append(target+40)
-
-        train_dataset.data = np.array(trainlist)
-        train_dataset.targets = np.array(train_label_list)
-        test_dataset.data = np.array(testlist)
-        test_dataset.targets = np.array(test_label_list)
-
-        self.train_data, self.train_targets = train_dataset.data, np.array(train_dataset.targets)
-        self.test_data, self.test_targets = test_dataset.data, np.array(test_dataset.targets)
-
-
 class CDDB(object):
     use_path = True
     def __init__(self, args):
@@ -239,4 +150,27 @@ class iDomainNet(iData):
         self.test_data = np.array(train_x)
         self.test_targets = np.array(train_y)
 
+class iCore50(iData):
+    use_path = False
+    def __init__(self, args):
+        self.args = args
+        class_order = np.arange(8 * 50).tolist()
+        self.class_order = class_order
 
+    def download_data(self):
+        datagen = CORE50(root=self.args.data_path, scenario="ni")
+        dataset_list = []
+        for i, train_batch in enumerate(datagen):
+            imglist, labellist = train_batch
+            labellist += i*50
+            imglist = imglist.astype(np.uint8)
+            dataset_list.append([imglist, labellist])
+        train_x = np.concatenate(np.array(dataset_list, dtype=object)[:, 0])
+        train_y = np.concatenate(np.array(dataset_list, dtype=object)[:, 1])
+        self.train_data = train_x
+        self.train_targets = train_y
+
+        test_x, test_y = datagen.get_test_set()
+        test_x = test_x.astype(np.uint8)
+        self.test_data = test_x
+        self.test_targets = test_y

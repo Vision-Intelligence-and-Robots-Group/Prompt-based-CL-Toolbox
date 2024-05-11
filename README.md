@@ -1,4 +1,4 @@
-# Prompt-based Incremental Learning Toolbox
+# Prompt-tuning based Incremental Learning Toolbox
 This repository contains awesome prompt-based incremental learning methods:
 
 **L2P**: Wang, Zifeng, et al. "[Learning to prompt for continual learning.](https://arxiv.org/pdf/2112.08654.pdf)" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.  
@@ -9,6 +9,12 @@ This repository contains awesome prompt-based incremental learning methods:
 Ubuntu 20.04.1 LTS  
 NVIDIA GeForce RTX 3090  
 Python 3.8
+CUDA 116
+
+### install using the requirements.txt
+```
+pip install -r requirements.txt
+```
 
 # Run
 ```
@@ -20,7 +26,8 @@ python -m torch.distributed.launch \
     --nproc_per_node <customize_by_yourself> \
     --master_port <customize_by_yourself> \
     --use_env main.py 
-        <sprompt_cddb_slip, l2p_cifar100, dualp_cifar100>
+        <sprompt_cddb_slip, l2p_cifar100, dualp_cifar100,
+        l2p_core50, dualp_core50>
 ```
 # Results
 #### Cifar100

@@ -4,7 +4,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 import torch
-from utils.data import iCIFAR100_vit,i5Datasets_vit, iImageNetR, iCore50, CDDB, iDomainNet
+from utils.data import iCIFAR100_vit, iImageNetR, iCore50, CDDB
 from torch.utils.data import DataLoader
 
 def _get_idata(dataset_name, args=None):
@@ -13,16 +13,12 @@ def _get_idata(dataset_name, args=None):
     # cifar100_vit
     if name == "cifar100_vit":
         return iCIFAR100_vit(args)
-    elif name == "5datasets_vit":
-        return i5Datasets_vit(args)
     elif name == "core50":
         return iCore50(args)
     elif name == "imagenetr":
         return iImageNetR(args)
     elif name == "cddb":
         return CDDB(args)
-    elif name == "domainnet":
-        return iDomainNet(args)
     else:
         raise NotImplementedError('Unknown dataset {}.'.format(dataset_name))
 
