@@ -29,7 +29,7 @@ python -m torch.distributed.launch \
         <sprompt_cddb_slip, l2p_cifar100, dualp_cifar100,
         l2p_core50, dualp_core50>
 ```
-# Results
+<!-- # Results
 #### Cifar100
 | Methods | Final_acc@1 | Reproduce Official Code |
 | ------- | ----------- | ----------------------- |
@@ -40,7 +40,7 @@ python -m torch.distributed.launch \
 | Methods       | Final_acc@1 | Reproduce Official Code |
 | -----         | ----------- | ----------------------- |
 | S-Prompt_sip  | 67.81       | 68.41                   |
-| S-Prompt_slip | 84.88       | 85.5                    |
+| S-Prompt_slip | 84.88       | 85.5                    | -->
 
 # Acknowledgement
 [Official Jax Implementation of L2P and DualP](https://github.com/google-research/l2p)  

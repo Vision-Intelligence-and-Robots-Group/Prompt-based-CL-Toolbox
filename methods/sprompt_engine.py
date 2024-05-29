@@ -17,12 +17,13 @@ from sklearn.cluster import KMeans
 from methods.base import BaseLearner
 from utils.toolkit import tensor2numpy
 from torch.nn.parallel import DistributedDataParallel as DDP
+from utils.dist_utils import get_rank
 from models.sinet import SiNet
 from models.slinet import SliNet
 
 batch = [128,64,32,32,32,16,16,16]
 
-class sprompt_engine(BaseLearner):
+class SPrompts(BaseLearner):
 
     def __init__(self, args):
         super().__init__(args)
@@ -46,6 +47,7 @@ class sprompt_engine(BaseLearner):
         self.batch_size_ori = args.batch_size
         self.init_lr = args.init_lr
         self.lrate = args.lrate
+        self.class_num = self._network.class_num
 
         self.all_keys = []
         
@@ -69,7 +71,7 @@ class sprompt_engine(BaseLearner):
         # settings for DDP
         self._network.to(self._device)
         if self.distributed:
-            self._network = DDP(self._network, device_ids=[self.local_rank])
+            self._network = DDP(self._network, device_ids=[get_rank()])
         
         # training
         self._train(train_loader, test_loader)
@@ -138,9 +140,10 @@ class sprompt_engine(BaseLearner):
             test_acc = self._compute_accuracy_domain(self._network, test_loader)
             info = 'Task {}, Epoch {}/{} => Loss {:.3f}, Train_accy {:.2f}, Test_accy {:.2f}'.format(
                 self._cur_task, epoch + 1, self.run_epoch, losses / len(train_loader), train_acc, test_acc)
-            # prog_bar.set_description(info)
+            prog_bar.set_description(info)
+            logging.info(info)
 
-        logging.info(info)
+        # logging.info(info)
 
     def clustering(self, dataloader):
         features = []

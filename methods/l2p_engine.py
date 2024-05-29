@@ -3,36 +3,15 @@ import timm
 import logging
 from methods.base import BaseLearner
 from torch.nn.parallel import DistributedDataParallel as DDP
-from models.l2p import _create_vision_transformer
+from utils.dist_utils import get_rank
+from models.l2p_vit import _create_vision_transformer
 import torch
 from tqdm import tqdm
 import numpy as np
 from torch.nn import functional as F
 from utils.toolkit import tensor2numpy
 
-from timm.optim import create_optimizer
-
-def test_model(model):  
-    img_path = '/home/pinna/data/core50_128x128/s1/o1/C_01_01_000.png'
-
-    from PIL import Image
-    from torchvision import transforms
-    print("start test model...")
-    scale = (0.05, 1.0)
-    transform = transforms.Compose([
-        transforms.Resize(224),
-        # transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        
-    ])
-    input = transform(Image.open(img_path)).unsqueeze(0)
-    model.to(torch.device("cuda:0"))
-    input = input.to(torch.device("cuda:0"))
-    outputs = model(input,0,None,True)
-    print(outputs)
-
-class l2p_engine(BaseLearner):
+class L2P(BaseLearner):
 
     def __init__(self, args):
         super().__init__(args)
@@ -49,14 +28,13 @@ class l2p_engine(BaseLearner):
             head_type=args.head_type,
             use_prompt_mask=args.use_prompt_mask)
 
-        model_kwargs = dict(num_classes=100, patch_size=16, embed_dim=768, depth=12, num_heads=12, 
+        model_kwargs = dict(num_classes=int(args.increment*args.num_tasks), patch_size=16, embed_dim=768, depth=12, num_heads=12, 
                             drop_rate=0., drop_path_rate=0., )
-        self._network_ori = _create_vision_transformer('vit_base_patch16_224_base', pretrained=args.pretrained, **model_kwargs)
-
-        model_kwargs = dict(num_classes=100, patch_size=16, embed_dim=768, depth=12, num_heads=12, 
+        self._network_ori = _create_vision_transformer(args.pretrained_model, pretrained=args.pretrained, **model_kwargs)
+        model_kwargs = dict(num_classes=int(args.increment*args.num_tasks), patch_size=16, embed_dim=768, depth=12, num_heads=12, 
                             drop_rate=0., drop_path_rate=0., **prompt_kwargs)
-        self._network = _create_vision_transformer('vit_base_patch16_224_base', pretrained=args.pretrained, **model_kwargs)
- 
+        self._network = _create_vision_transformer(args.pretrained_model, pretrained=args.pretrained, **model_kwargs)
+        
         self.args = args
         self.EPSILON = args.EPSILON
         
@@ -98,10 +76,10 @@ class l2p_engine(BaseLearner):
             for n, p in self._network.named_parameters():
                 if n.startswith(tuple(self.args.freeze)):
                     p.requires_grad = False
-
+        
         # settings for DDP
         if self.distributed:
-            self._network = DDP(self._network, device_ids=[self.local_rank])
+            self._network = DDP(self._network, device_ids=[get_rank()], find_unused_parameters=False, broadcast_buffers=False)
         
         # training
         self._train(train_loader, test_loader)
@@ -131,34 +109,17 @@ class l2p_engine(BaseLearner):
         else:
             optimizer = optim.Adam(network_params, lr=self.lrate, eps=1e-8, betas=(0.9, 0.999))
             self.run_epoch = self.epochs
-        self.train_function(train_loader, test_loader, optimizer)
-    
-    def train_function(self, train_loader, test_loader, optimizer):
-        # Transfer previous learned prompt params to the new prompt
+            
         if self.args.prompt_pool and self.args.shared_prompt_pool:
-            if self._cur_task >0:
+            if self._cur_task > 0:
                 prev_start = (self._cur_task - 1) * self.args.top_k
                 prev_end = self._cur_task * self.args.top_k
 
                 cur_start = prev_end
                 cur_end = (self._cur_task + 1) * self.args.top_k
 
-                if (prev_end > self.args.size) or (cur_end > self.args.size):
-                    pass
-                else:
-                    cur_idx = (slice(cur_start, cur_end))
-                    prev_idx = (slice(prev_start, prev_end))
+                self.transfer_prompt_params(prev_start, prev_end, cur_start, cur_end, optimizer)
 
-                    with torch.no_grad():
-                        if self.args.distributed:
-                            self._network.module.prompt.prompt.grad.zero_()
-                            self._network.module.prompt.prompt[cur_idx] = self._network.module.prompt.prompt[prev_idx]
-                            optimizer.param_groups[0]['params'] = self._network.module.parameters()
-                        else:
-                            self._network.prompt.prompt.grad.zero_()
-                            self._network.prompt.prompt[cur_idx] = self._network.prompt.prompt[prev_idx]
-                            optimizer.param_groups[0]['params'] = self._network.parameters()
-        # Transfer previous learned prompt param keys to the new prompt
         if self.args.prompt_pool and self.args.shared_prompt_key:
             if self._cur_task > 0:
                 prev_start = (self._cur_task - 1) * self.args.top_k
@@ -167,24 +128,53 @@ class l2p_engine(BaseLearner):
                 cur_start = prev_end
                 cur_end = (self._cur_task + 1) * self.args.top_k
 
-                with torch.no_grad():
-                    if self.args.distributed:
-                        self._network.module.prompt.prompt_key.grad.zero_()
-                        self._network.module.prompt.prompt_key[cur_idx] = self._network.module.prompt.prompt_key[prev_idx]
-                        optimizer.param_groups[0]['params'] = self._network.module.parameters()
-                    else:
-                        self._network.prompt.prompt_key.grad.zero_()
-                        self._network.prompt.prompt_key[cur_idx] = self._network.prompt.prompt_key[prev_idx]
-                        optimizer.param_groups[0]['params'] = self._network.parameters()
-                        
+                self.transfer_prompt_param_keys(prev_start, prev_end, cur_start, cur_end, optimizer)
+        
+        self.train_function(train_loader, test_loader, optimizer)
+        
+    def transfer_prompt_params(self, prev_start, prev_end, cur_start, cur_end, optimizer):
+        if (prev_end > self.args.size) or (cur_end > self.args.size):
+            return
+
+        cur_idx = slice(cur_start, cur_end)
+        prev_idx = slice(prev_start, prev_end)
+
+        with torch.no_grad():
+            if self.args.distributed:
+                self._network.module.prompt.prompt.grad.zero_()
+                self._network.module.prompt.prompt[cur_idx] = self._network.module.prompt.prompt[prev_idx]
+                optimizer.param_groups[0]['params'] = self._network.module.parameters()
+            else:
+                self._network.prompt.prompt.grad.zero_()
+                self._network.prompt.prompt[cur_idx] = self._network.prompt.prompt[prev_idx]
+                optimizer.param_groups[0]['params'] = self._network.parameters()
+
+    def transfer_prompt_param_keys(self, prev_start, prev_end, cur_start, cur_end, optimizer):
+        cur_idx = slice(cur_start, cur_end)
+        prev_idx = slice(prev_start, prev_end)
+
+        with torch.no_grad():
+            if self.args.distributed:
+                self._network.module.prompt.prompt_key.grad.zero_()
+                self._network.module.prompt.prompt_key[cur_idx] = self._network.module.prompt.prompt_key[prev_idx]
+                optimizer.param_groups[0]['params'] = self._network.module.parameters()
+            else:
+                self._network.prompt.prompt_key.grad.zero_()
+                self._network.prompt.prompt_key[cur_idx] = self._network.prompt.prompt_key[prev_idx]
+                optimizer.param_groups[0]['params'] = self._network.parameters()
+
+
+    def train_function(self, train_loader, test_loader, optimizer):
         prog_bar = tqdm(range(self.run_epoch))
         self._network.train(True)
         self._network_ori.eval()
+        
         for _, epoch in enumerate(prog_bar):
-            if self.distributed and self.args.world_size>1:
+            if self.distributed and self.args.world_size > 1:
                 train_loader.sampler.set_epoch(epoch)
             losses = 0.
             correct, total = 0, 0
+            
             for i, (_, inputs, targets) in enumerate(train_loader):
                 inputs = inputs.to(self._device, non_blocking=True)
                 targets = targets.to(self._device, non_blocking=True)
@@ -224,6 +214,6 @@ class l2p_engine(BaseLearner):
             info = 'Task {}, Epoch {}/{} => Loss {:.3f}, Train_accy {:.2f}, Test_accy {:.2f}'.format(
                 self._cur_task, epoch + 1, self.run_epoch, losses / len(train_loader), train_acc, test_acc)
             prog_bar.set_description(info)
+            logging.info(info)
 
-        logging.info(info)
-            
+        # logging.info(info)

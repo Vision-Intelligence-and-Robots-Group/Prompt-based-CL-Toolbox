@@ -7,6 +7,7 @@ from scipy.spatial.distance import cdist
 
 class BaseLearner(object):
     def __init__(self, args):
+        self.args = args
         self._cur_task = 0
         self._known_classes = 0
         self._total_classes = 0
@@ -20,16 +21,8 @@ class BaseLearner(object):
         self.acc_table_nme = np.zeros([self.num_tasks, self.num_tasks])
 
         self.result_curve = dict()
-
-        if args.dataset == "cddb":
-            self.class_num = 2
-        elif args.dataset == "domainnet":
-            self.class_num = 345
-        elif args.dataset == "core50":
-            self.class_num = 50
             
         self._device = torch.device(args.device)
-        self.local_rank = args.local_rank
         self.world_size = args.world_size
 
         self.distributed = args.distributed
@@ -48,16 +41,16 @@ class BaseLearner(object):
         y_pred, y_true = self._eval_cnn(test_loader)
         cnn_accy = self._evaluate(y_pred, y_true, True)
         self._logging_result(cnn_accy, 'CNN')
-
+        
         if hasattr(self, '_class_means'):
             y_pred, y_true = self._eval_nme_multiple(test_loader, self._class_means)
             nme_accy = self._evaluate(y_pred, y_true, False)
-            self._logging_result(nme_accy, 'NME')
+            self._logging_result(nme_accy, 'NME')     
         print('\n')
-
+    
     def _logging_result(self, result, prefix):
         if self.result_curve.get(prefix) == None:
-            self.result_curve[prefix] = {'top1': [], 'top5': []}
+            self.result_curve[prefix] = {'top1': []}
 
         logging.info('{}: {}'.format(prefix, result['grouped']))
         self.result_curve[prefix]['top1'].append(result['top1'])
@@ -66,7 +59,6 @@ class BaseLearner(object):
     def _eval_cnn(self, loader):
         self._network.eval()
         y_pred, y_true = [], []
-        confusion_task = torch.zeros(10,10)
         for _, (_, inputs, targets) in enumerate(loader):
             inputs = inputs.to(self._device)
             targets = targets.to(self._device)
@@ -97,12 +89,6 @@ class BaseLearner(object):
             y_pred.append(predicts.cpu().numpy())
             y_true.append(targets.cpu().numpy())
 
-            for j in range(inputs .shape[0]):
-                tar_ind = torch.div(targets[j], 10, rounding_mode='trunc')
-                pred_ind = torch.div(predicts[j], 10, rounding_mode='trunc')
-                confusion_task[tar_ind][pred_ind] += 1
-        print("confusion_task=")
-        print(confusion_task[:self._cur_task+1, :self._cur_task+1])
         return np.concatenate(y_pred), np.concatenate(y_true)  # [N, topk]
     
     def _eval_nme(self, loader, class_means):
@@ -133,7 +119,7 @@ class BaseLearner(object):
             grouped = accuracy_domain(y_pred.T[0], y_true, self._known_classes, class_num=self.class_num)
         else:
             if is_cnn:
-                grouped = accuracy(y_pred.T[0], y_true, self._known_classes, self.increment, self.acc_table_cnn, self._cur_task)
+                grouped = accuracy(y_pred.T[0], y_true, self._known_classes, self.increment, self.acc_table_cnn, self._cur_task)            
             else:
                 grouped = accuracy(y_pred.T[0], y_true, self._known_classes, self.increment, self.acc_table_nme, self._cur_task)
 

@@ -178,10 +178,6 @@ class MemoryManager(object):
         vectors, targets = [], []
         for _, _inputs, _targets in loader:
             _targets = _targets.numpy()
-            # if isinstance(self._network, nn.DataParallel):
-            #     _vectors = tensor2numpy(model.module.extract_vector(_inputs.to(self._device)))
-            # else:
-            #     _vectors = tensor2numpy(model.extract_vector(_inputs.to(self._device)))
             _vectors = tensor2numpy(model.extract_vector(_inputs.to(self._device)))
 
             vectors.append(_vectors)

@@ -3,16 +3,15 @@ import timm
 import logging
 from methods.base import BaseLearner
 from torch.nn.parallel import DistributedDataParallel as DDP
-from models.dualp import _create_vision_transformer
+from utils.dist_utils import get_rank
+from models.dualp_vit import _create_vision_transformer
 import torch
 from tqdm import tqdm
 import numpy as np
 from torch.nn import functional as F
 from utils.toolkit import tensor2numpy
 
-from timm.optim import create_optimizer
-
-class dualp_engine(BaseLearner):
+class DualPrompt(BaseLearner):
 
     def __init__(self, args):
         super().__init__(args)
@@ -37,15 +36,14 @@ class dualp_engine(BaseLearner):
             use_prefix_tune_for_e_prompt=args.use_prefix_tune_for_e_prompt,
             same_key_value=args.same_key_value,)
 
-
-        model_kwargs = dict(num_classes=100, patch_size=16, embed_dim=768, depth=12, num_heads=12, 
+        model_kwargs = dict(num_classes=int(args.increment*args.num_tasks), patch_size=16, embed_dim=768, depth=12, num_heads=12, 
                             drop_rate=0., drop_path_rate=0., )
-        self._network_ori = _create_vision_transformer('vit_base_patch16_224_base', pretrained=args.pretrained, **model_kwargs)
-
-        model_kwargs = dict(num_classes=100, patch_size=16, embed_dim=768, depth=12, num_heads=12, 
+        self._network_ori = _create_vision_transformer(args.pretrained_model, pretrained=args.pretrained, **model_kwargs)
+        model_kwargs = dict(num_classes=int(args.increment*args.num_tasks), patch_size=16, embed_dim=768, depth=12, num_heads=12, 
                             drop_rate=0., drop_path_rate=0., **prompt_kwargs)
-        self._network = _create_vision_transformer('vit_base_patch16_224_base', pretrained=args.pretrained, **model_kwargs)
-
+        self._network = _create_vision_transformer(args.pretrained_model, pretrained=args.pretrained, **model_kwargs)
+        
+        
         self.args = args
         self.EPSILON = args.EPSILON
         
@@ -91,7 +89,7 @@ class dualp_engine(BaseLearner):
 
         # settings for DDP
         if self.distributed:
-            self._network = DDP(self._network, device_ids=[self.local_rank])
+            self._network = DDP(self._network, device_ids=[get_rank()])
         
         # training
         self._train(train_loader, test_loader)
@@ -120,9 +118,7 @@ class dualp_engine(BaseLearner):
         else:
             optimizer = optim.Adam(network_params, lr=self.lrate, eps=1e-8, betas=(0.9, 0.999))
             self.run_epoch = self.epochs
-        self.train_function(train_loader, test_loader, optimizer)
-    
-    def train_function(self, train_loader, test_loader, optimizer):
+            
         # Transfer previous learned prompt params to the new prompt
         if self.args.prompt_pool and self.args.shared_prompt_pool:
             if self._cur_task > 0:
@@ -166,7 +162,11 @@ class dualp_engine(BaseLearner):
                         self._network.e_prompt.prompt_key.grad.zero_()
                         self._network.e_prompt.prompt_key[cur_idx] = self._network.e_prompt.prompt_key[prev_idx]
                         optimizer.param_groups[0]['params'] = self._network.parameters()
-   
+            
+        self.train_function(train_loader, test_loader, optimizer)
+    
+    def train_function(self, train_loader, test_loader, optimizer):
+        
         prog_bar = tqdm(range(self.run_epoch))
         self._network.train(True)
         self._network_ori.eval()
@@ -214,6 +214,7 @@ class dualp_engine(BaseLearner):
             info = 'Task {}, Epoch {}/{} => Loss {:.3f}, Train_accy {:.2f}, Test_accy {:.2f}'.format(
                 self._cur_task, epoch + 1, self.run_epoch, losses / len(train_loader), train_acc, test_acc)
             prog_bar.set_description(info)
+            logging.info(info)
 
-        logging.info(info)
+        # logging.info(info)
             

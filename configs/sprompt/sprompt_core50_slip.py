@@ -8,7 +8,9 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--input-size', default=224, type=int, help='images input size')
     subparsers.add_argument('--data_path', default="/home/pinna/data/core50_128x128", type=str, help='')
     subparsers.add_argument('--shuffle', default=False, type=bool, help='')
-    subparsers.add_argument('--normalize', default=True, type=bool, help='')
+    
+    subparsers.add_argument('--normalize_train', default=True, type=bool, help='')
+    subparsers.add_argument('--normalize_test', default=False, type=bool, help='')
     subparsers.add_argument('--color_jitter', default=True, type=bool, help='')
     subparsers.add_argument('--pin_mem', default=True, type=bool, help='')
 
@@ -31,6 +33,8 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--pretrained_model', default='clip', type=str, help='')
     subparsers.add_argument('--pretrained', default=True, type=bool, help='')
     subparsers.add_argument('--embd_dim', default=768, type=int, help='')
+    subparsers.add_argument('--save_checkpoints', default=True, type=bool, help='')
+    subparsers.add_argument('--save_vis', default=False, type=bool, help='')
 
     #prompt parameter
     subparsers.add_argument('--prompt_length', default=10, type=int, help='')

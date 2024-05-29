@@ -49,7 +49,6 @@ def _cfg(url='', **kwargs):
         **kwargs
     }
 
-
 default_cfgs = {
     # patch models (weights from official Google JAX impl)
     'vit_tiny_patch16_224': _cfg(
@@ -200,7 +199,6 @@ default_cfgs = {
 
 }
 
-# modify
 class Attention(nn.Module):
     def __init__(self, dim, num_heads=8, qkv_bias=False, attn_drop=0., proj_drop=0.):
         super().__init__()
@@ -252,7 +250,8 @@ class Block(nn.Module):
             init_values=None,
             drop_path=0.,
             act_layer=nn.GELU,
-            norm_layer=nn.LayerNorm
+            norm_layer=nn.LayerNorm,
+            attn_layer=None # modify
     ):
         super().__init__()
         self.norm1 = norm_layer(dim)

@@ -1,0 +1,57 @@
+2024-04-30 04:14:25,905 [distributed_c10d.py] => Added key: store_based_barrier_key:1 to store for rank: 1
+2024-04-30 04:14:25,924 [distributed_c10d.py] => Added key: store_based_barrier_key:1 to store for rank: 0
+2024-04-30 04:14:25,925 [distributed_c10d.py] => Rank 0: Completed store-based barrier for key:store_based_barrier_key:1 with 2 nodes.
+2024-04-30 04:14:25,925 [distributed_c10d.py] => Rank 1: Completed store-based barrier for key:store_based_barrier_key:1 with 2 nodes.
+2024-04-30 04:14:30,998 [data_manager.py] => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+2024-04-30 04:14:35,406 [l2p.py] => Resized position embedding: torch.Size([1, 197, 768]) to torch.Size([1, 222, 768])
+2024-04-30 04:14:35,406 [l2p.py] => Position embedding grid-size from [14, 14] to (14, 14)
+2024-04-30 04:14:36,100 [l2p_engine.py] => Learning on 0-10
+2024-04-30 04:14:41,670 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:17:22,077 [l2p_engine.py] => Task 0, Epoch 5/5 => Loss 0.164, Train_accy 89.52, Test_accy 96.90
+2024-04-30 04:17:28,884 [base.py] => CNN: {'total': 96.9, '00-09': 96.9, 'old': 0, 'new': 96.9}
+2024-04-30 04:17:28,884 [base.py] => CNN top1 curve: [96.9]
+2024-04-30 04:17:28,885 [l2p_engine.py] => Learning on 10-20
+2024-04-30 04:17:30,414 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:20:40,319 [l2p_engine.py] => Task 1, Epoch 5/5 => Loss 0.249, Train_accy 86.40, Test_accy 93.15
+2024-04-30 04:20:52,734 [base.py] => CNN: {'total': 93.15, '00-09': 92.9, '10-19': 93.4, 'old': 92.9, 'new': 93.4}
+2024-04-30 04:20:52,735 [base.py] => CNN top1 curve: [96.9, 93.15]
+2024-04-30 04:20:52,735 [l2p_engine.py] => Learning on 20-30
+2024-04-30 04:20:54,340 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:24:33,166 [l2p_engine.py] => Task 2, Epoch 5/5 => Loss 0.153, Train_accy 89.32, Test_accy 90.57
+2024-04-30 04:24:51,274 [base.py] => CNN: {'total': 90.57, '00-09': 89.9, '10-19': 91.2, '20-29': 90.6, 'old': 90.55, 'new': 90.6}
+2024-04-30 04:24:51,275 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57]
+2024-04-30 04:24:51,275 [l2p_engine.py] => Learning on 30-40
+2024-04-30 04:24:52,810 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:29:01,305 [l2p_engine.py] => Task 3, Epoch 5/5 => Loss 0.126, Train_accy 90.08, Test_accy 88.47
+2024-04-30 04:29:25,063 [base.py] => CNN: {'total': 88.48, '00-09': 88.8, '10-19': 86.6, '20-29': 88.5, '30-39': 90.0, 'old': 87.97, 'new': 90.0}
+2024-04-30 04:29:25,064 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48]
+2024-04-30 04:29:25,064 [l2p_engine.py] => Learning on 40-50
+2024-04-30 04:29:26,596 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:34:05,067 [l2p_engine.py] => Task 4, Epoch 5/5 => Loss 0.162, Train_accy 88.80, Test_accy 86.68
+2024-04-30 04:34:34,535 [base.py] => CNN: {'total': 86.68, '00-09': 87.1, '10-19': 83.6, '20-29': 86.1, '30-39': 87.4, '40-49': 89.2, 'old': 86.05, 'new': 89.2}
+2024-04-30 04:34:34,536 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48, 86.68]
+2024-04-30 04:34:34,536 [l2p_engine.py] => Learning on 50-60
+2024-04-30 04:34:36,036 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:39:44,484 [l2p_engine.py] => Task 5, Epoch 5/5 => Loss 0.122, Train_accy 89.68, Test_accy 85.13
+2024-04-30 04:40:19,605 [base.py] => CNN: {'total': 85.13, '00-09': 87.5, '10-19': 80.3, '20-29': 84.8, '30-39': 86.2, '40-49': 87.1, '50-59': 84.9, 'old': 85.18, 'new': 84.9}
+2024-04-30 04:40:19,606 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48, 86.68, 85.13]
+2024-04-30 04:40:19,606 [l2p_engine.py] => Learning on 60-70
+2024-04-30 04:40:21,106 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:45:59,616 [l2p_engine.py] => Task 6, Epoch 5/5 => Loss 0.106, Train_accy 89.92, Test_accy 84.74
+2024-04-30 04:46:40,474 [base.py] => CNN: {'total': 84.74, '00-09': 87.8, '10-19': 82.6, '20-29': 82.8, '30-39': 85.0, '40-49': 86.4, '50-59': 82.1, '60-69': 86.5, 'old': 84.45, 'new': 86.5}
+2024-04-30 04:46:40,475 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48, 86.68, 85.13, 84.74]
+2024-04-30 04:46:40,475 [l2p_engine.py] => Learning on 70-80
+2024-04-30 04:46:42,038 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 04:52:50,162 [l2p_engine.py] => Task 7, Epoch 5/5 => Loss 0.128, Train_accy 89.76, Test_accy 84.55
+2024-04-30 04:53:36,779 [base.py] => CNN: {'total': 84.55, '00-09': 86.8, '10-19': 81.2, '20-29': 83.5, '30-39': 86.3, '40-49': 87.2, '50-59': 83.0, '60-69': 83.0, '70-79': 85.4, 'old': 84.43, 'new': 85.4}
+2024-04-30 04:53:36,780 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48, 86.68, 85.13, 84.74, 84.55]
+2024-04-30 04:53:36,780 [l2p_engine.py] => Learning on 80-90
+2024-04-30 04:53:38,299 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 05:00:15,957 [l2p_engine.py] => Task 8, Epoch 5/5 => Loss 0.076, Train_accy 91.80, Test_accy 82.60
+2024-04-30 05:01:08,177 [base.py] => CNN: {'total': 82.6, '00-09': 85.3, '10-19': 77.0, '20-29': 81.2, '30-39': 84.4, '40-49': 83.1, '50-59': 79.4, '60-69': 80.5, '70-79': 82.6, '80-89': 89.9, 'old': 81.69, 'new': 89.9}
+2024-04-30 05:01:08,177 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48, 86.68, 85.13, 84.74, 84.55, 82.6]
+2024-04-30 05:01:08,177 [l2p_engine.py] => Learning on 90-100
+2024-04-30 05:01:09,723 [distributed.py] => Reducer buckets have been rebuilt in this iteration.
+2024-04-30 05:08:16,934 [l2p_engine.py] => Task 9, Epoch 5/5 => Loss 0.060, Train_accy 92.36, Test_accy 82.15
+2024-04-30 05:09:14,650 [base.py] => CNN: {'total': 82.15, '00-09': 84.7, '10-19': 75.6, '20-29': 80.8, '30-39': 82.3, '40-49': 81.2, '50-59': 78.9, '60-69': 79.9, '70-79': 81.0, '80-89': 88.3, '90-99': 88.8, 'old': 81.41, 'new': 88.8}
+2024-04-30 05:09:14,650 [base.py] => CNN top1 curve: [96.9, 93.15, 90.57, 88.48, 86.68, 85.13, 84.74, 84.55, 82.6, 82.15]

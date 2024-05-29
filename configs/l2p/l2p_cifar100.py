@@ -8,7 +8,9 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--input-size', default=224, type=int, help='images input size')
     subparsers.add_argument('--data_path', default="/home/pinna/data/cifar100", type=str, help='')
     subparsers.add_argument('--shuffle', default=False, type=bool, help='')
-    subparsers.add_argument('--normalize', default=False, type=bool, help='')
+    
+    subparsers.add_argument('--normalize_train', default=False, type=bool, help='')
+    subparsers.add_argument('--normalize_test', default=False, type=bool, help='')
     subparsers.add_argument('--color_jitter', default=False, type=bool, help='')
     subparsers.add_argument('--pin_mem', default=True, type=bool, help='')
 
@@ -31,6 +33,8 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--pretrained_model', default='vit_base_patch16_224_base', type=str, help='')
     subparsers.add_argument('--pretrained', default=True, type=bool, help='')
     subparsers.add_argument('--embd_dim', default=768, type=int, help='')
+    subparsers.add_argument('--save_checkpoints', default=True, type=bool, help='')
+    subparsers.add_argument('--save_vis', default=True, type=bool, help='')
 
     # training stage
     subparsers.add_argument('--batch_size', default=16, type=int, help='')
@@ -55,7 +59,8 @@ def get_args_parser(subparsers):
     # auxiliary
     subparsers.add_argument('--sched', default=False, type=bool, help='')
     subparsers.add_argument('--calculate_distributed', default=True, type=bool, help='')
-
+    subparsers.add_argument('--unscale_lr', type=bool, default=True, help='scaling lr by batch size (default: True)')
+    
     #prompt parameter
     subparsers.add_argument('--top_k', default=5, type=int, )
     subparsers.add_argument('--size', default=10, type=int,)
@@ -72,8 +77,6 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--pull_constraint', default=True)
     subparsers.add_argument('--pull_constraint_coeff', default=0.1, type=float)
 
-
-    subparsers.add_argument('--unscale_lr', type=bool, default=True, help='scaling lr by batch size (default: True)')
     #vit parameter
     subparsers.add_argument('--freeze', default=['blocks', 'patch_embed', 'cls_token', 'norm', 'pos_embed'], nargs='*', type=list, help='freeze part in backbone model')
     subparsers.add_argument('--head_type', default='prompt', choices=['token', 'gap', 'prompt', 'token+prompt'], type=str, help='input type of classification head')

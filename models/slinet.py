@@ -10,7 +10,7 @@ import torch.nn as nn
 import copy
 
 from models.clip.prompt_learner import cfgc, load_clip_to_cpu, TextEncoder, PromptLearner
-from utils.class_names import core50_classnames, domainnet_classnames, cddb_classnames
+from data.datautils.class_names import core50_classnames, domainnet_classnames, cddb_classnames
 
 
 class SliNet(nn.Module):

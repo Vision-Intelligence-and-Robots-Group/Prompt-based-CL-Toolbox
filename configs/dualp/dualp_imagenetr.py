@@ -1,14 +1,16 @@
 import argparse
 
 def get_args_parser(subparsers):
-    subparsers.add_argument('--prefix', default='best', type=str, help='')
+    subparsers.add_argument('--prefix', default='dualp', type=str, help='')
 
     #dataset
     subparsers.add_argument('--dataset', default="imagenetr", type=str, help='')
     subparsers.add_argument('--input-size', default=224, type=int, help='images input size')
     subparsers.add_argument('--data_path', default="/home/pinna/data/imagenet-r", type=str, help='')
     subparsers.add_argument('--shuffle', default=False, type=bool, help='')
-    subparsers.add_argument('--normalize', default=True, type=bool, help='')
+    
+    subparsers.add_argument('--normalize_train', default=False, type=bool, help='')
+    subparsers.add_argument('--normalize_test', default=False, type=bool, help='')
     subparsers.add_argument('--color_jitter', default=False, type=bool, help='')
     subparsers.add_argument('--pin_mem', default=True, type=bool, help='')
 
@@ -31,13 +33,15 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--pretrained_model', default='vit_base_patch16_224_base', type=str, help='')
     subparsers.add_argument('--pretrained', default=True, type=bool, help='')
     subparsers.add_argument('--embd_dim', default=768, type=int, help='')
+    subparsers.add_argument('--save_checkpoints', default=True, type=bool, help='')
+    subparsers.add_argument('--save_vis', default=True, type=bool, help='')
 
     # training stage
-    subparsers.add_argument('--batch_size', default=128, type=int, help='')
+    subparsers.add_argument('--batch_size', default=24, type=int, help='')
     subparsers.add_argument('--num_workers', default=4, type=int, help='')
     subparsers.add_argument('--EPSILON', default=1e-8, type=float, help='')
-    subparsers.add_argument('--init_lr', default=0.03, type=float, help='')
-    subparsers.add_argument('--lrate', default=0.03, type=float, help='')
+    subparsers.add_argument('--init_lr', default=0.005, type=float, help='')
+    subparsers.add_argument('--lrate', default=0.005, type=float, help='')
     subparsers.add_argument('--init_epoch', default=50, type=int, help='')
     subparsers.add_argument('--epochs', default=50, type=int, help='')
     subparsers.add_argument('--init_weight_decay', default=0.0, type=float, help='')
@@ -54,9 +58,8 @@ def get_args_parser(subparsers):
 
     # auxiliary
     subparsers.add_argument('--sched', default=False, type=bool, help='')
-    subparsers.add_argument('--calculate_distributed', default=False, type=bool, help='')
+    subparsers.add_argument('--calculate_distributed', default=True, type=bool, help='')
     subparsers.add_argument('--scale_batch', default=False, type=bool, help='')
-    subparsers.add_argument('--scale_lr', type=bool, default=True, help='')
     subparsers.add_argument('--unscale_lr', type=bool, default=True, help='scaling lr by batch size (default: True)')
 
     # E-Prompt parameters
@@ -82,7 +85,7 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--embedding_key', default='cls', type=str)
     subparsers.add_argument('--prompt_key_init', default='uniform', type=str)
     subparsers.add_argument('--use_prompt_mask', default=True, type=bool)
-    subparsers.add_argument('--batchwise_prompt', default=False, type=bool)
+    subparsers.add_argument('--batchwise_prompt', default=True, type=bool)
     subparsers.add_argument('--pull_constraint', default=True)
     subparsers.add_argument('--pull_constraint_coeff', default=1.0, type=float)
     subparsers.add_argument('--same_key_value', default=False, type=bool)

@@ -10,10 +10,33 @@ from functools import partial
 import copy
 from collections import OrderedDict
 
-from models.vision_transformer import VisionTransformer, PatchEmbed, Block,resolve_pretrained_cfg, build_model_with_cfg, checkpoint_filter_fn
+from models.vision_transformer import VisionTransformer, PatchEmbed, Block
+from models.vision_transformer import resolve_pretrained_cfg, build_model_with_cfg, checkpoint_filter_fn
+from models.vision_transformer import get_init_weights_vit, init_weights_vit_timm, init_weights_vit_jax, init_weights_vit_moco
+
 from timm.models.layers import trunc_normal_
 from timm.models.helpers import named_apply, checkpoint_seq
 import math
+
+def _create_vision_transformer(variant, pretrained=False, **kwargs):
+    if kwargs.get('features_only', None):
+        raise RuntimeError('features_only not implemented for Vision Transformer models.')
+
+    # NOTE this extra code to support handling of repr size for in21k pretrained models
+    pretrained_cfg = resolve_pretrained_cfg(variant)
+    default_num_classes = pretrained_cfg['num_classes']
+    num_classes = kwargs.get('num_classes', default_num_classes)
+    repr_size = kwargs.pop('representation_size', None)
+    if repr_size is not None and num_classes != default_num_classes:
+        repr_size = None
+    
+    model = build_model_with_cfg(
+        ViT_Prompts, variant, pretrained,
+        pretrained_cfg=pretrained_cfg,
+        pretrained_filter_fn=checkpoint_filter_fn,
+        pretrained_custom_load='npz' in pretrained_cfg['url'],
+        **kwargs)
+    return model
 
 class ViT_Prompts(VisionTransformer):
     def __init__(
@@ -29,6 +52,7 @@ class ViT_Prompts(VisionTransformer):
         
         norm_layer = norm_layer or partial(nn.LayerNorm, eps=1e-6)
         act_layer = act_layer or nn.GELU
+        
         self.num_classes = num_classes
         self.global_pool = global_pool
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
@@ -67,7 +91,7 @@ class ViT_Prompts(VisionTransformer):
         self.out_dim = final_chs
 
         if weight_init != 'skip':
-            self.init_weights(weight_init)
+            self._init_weights(weight_init)
 
     def _reset_representation(self, representation_size):
         self.representation_size = representation_size
@@ -79,10 +103,11 @@ class ViT_Prompts(VisionTransformer):
         else:
             self.pre_logits = nn.Identity()
 
-    def init_weights(self, mode=''):
+    def _init_weights(self, mode=''):
         assert mode in ('jax', 'jax_nlhb', 'moco', '')
         head_bias = -math.log(self.num_classes) if 'nlhb' in mode else 0.
         trunc_normal_(self.pos_embed, std=.02)
+        
         trunc_normal_(self.pos_embed_grow, std=.02)
         nn.init.normal_(self.cls_token, std=1e-6)
         nn.init.normal_(self.cls_token_grow, std=1e-6)
@@ -147,18 +172,6 @@ class ViT_Prompts(VisionTransformer):
             'features': x
         }
     
-class S_Prompts_vit(ViT_Prompts):
-    def __init__(
-            self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, global_pool='token',
-            embed_dim=768, depth=12, num_heads=12, mlp_ratio=4., qkv_bias=True, representation_size=None,
-            drop_rate=0., attn_drop_rate=0., drop_path_rate=0., weight_init='', init_values=None,
-            embed_layer=PatchEmbed, norm_layer=None, act_layer=None, block_fn=Block):
-
-        super().__init__(img_size=img_size, patch_size=patch_size, in_chans=in_chans, num_classes=num_classes, global_pool=global_pool,
-            embed_dim=embed_dim, depth=depth, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, representation_size=representation_size,
-            drop_rate=drop_rate, attn_drop_rate=attn_drop_rate, drop_path_rate=drop_path_rate, weight_init=weight_init, init_values=init_values,
-            embed_layer=embed_layer, norm_layer=norm_layer, act_layer=act_layer, block_fn=block_fn)
-
     def forward(self, x, instance_tokens=None, **kwargs):
         x = self.patch_embed(x)
         x = torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
@@ -177,27 +190,6 @@ class S_Prompts_vit(ViT_Prompts):
             x = x[:, 1:].mean(dim=1) if self.global_pool == 'avg' else x[:, 0]
         x = self.fc_norm(x)
         return x
-
-
-def _create_vision_transformer(variant, pretrained=False, **kwargs):
-    if kwargs.get('features_only', None):
-        raise RuntimeError('features_only not implemented for Vision Transformer models.')
-
-    # NOTE this extra code to support handling of repr size for in21k pretrained models
-    pretrained_cfg = resolve_pretrained_cfg(variant)
-    default_num_classes = pretrained_cfg['num_classes']
-    num_classes = kwargs.get('num_classes', default_num_classes)
-    repr_size = kwargs.pop('representation_size', None)
-    if repr_size is not None and num_classes != default_num_classes:
-        repr_size = None
-
-    model = build_model_with_cfg(
-        S_Prompts_vit, variant, pretrained,
-        pretrained_cfg=pretrained_cfg,
-        pretrained_filter_fn=checkpoint_filter_fn,
-        pretrained_custom_load='npz' in pretrained_cfg['url'],
-        **kwargs)
-    return model
 
 class SiNet(nn.Module):
 

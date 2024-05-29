@@ -1,24 +1,26 @@
 import logging
 import numpy as np
 from PIL import Image
-from torch.utils.data import Dataset
-from torchvision import transforms
 import torch
-from utils.data import iCIFAR100_vit, iImageNetR, iCore50, CDDB
-from torch.utils.data import DataLoader
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader
+from data.datasets import iCIFAR100_vit,i5Datasets_vit, iImageNetR, iCore50, CDDB, iDomainNet
 
 def _get_idata(dataset_name, args=None):
     name = dataset_name.lower()
-    # pinna
-    # cifar100_vit
+
     if name == "cifar100_vit":
         return iCIFAR100_vit(args)
+    elif name == "5datasets_vit":
+        return i5Datasets_vit(args)
     elif name == "core50":
         return iCore50(args)
     elif name == "imagenetr":
         return iImageNetR(args)
     elif name == "cddb":
         return CDDB(args)
+    elif name == "domainnet":
+        return iDomainNet(args)
     else:
         raise NotImplementedError('Unknown dataset {}.'.format(dataset_name))
 
@@ -128,31 +130,32 @@ class DataManager(object):
         return x[idxes], y[idxes]
     
     def _build_transform(self, is_train, args):
-        # resize_im = args.input_size > 32
+        input_size = 224
+        resize_im = input_size > 32
         if is_train:
             scale = (0.05, 1.0)
             ratio = (3. / 4., 4. / 3.)
             t = []
-            t.append(transforms.Resize(256))
             if self.args.color_jitter:
                 t.append(transforms.ColorJitter(brightness=63/255))
-            t.append(transforms.RandomResizedCrop(args.input_size, scale=scale, ratio=ratio))
+            t.append(transforms.RandomResizedCrop(input_size, scale=scale, ratio=ratio))
             t.append(transforms.RandomHorizontalFlip(p=0.5))
             t.append(transforms.ToTensor())
-            if self.args.normalize:
+            if self.args.normalize_train:
                 t.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
-
+            
             return transforms.Compose(t)
             
-            # return transform
-
         t = []
-        t.append(transforms.Resize(256))
-        t.append(transforms.CenterCrop(224))
+        if resize_im:
+            size = int((256 / 224) * input_size)
+            t.append(
+                transforms.Resize(size),  # to maintain same ratio w.r.t. 224 images
+            )
+            t.append(transforms.CenterCrop(input_size))
         t.append(transforms.ToTensor())
-        if self.args.normalize:
+        if self.args.normalize_test:
                 t.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
-        
         return transforms.Compose(t)
 
 class DummyDataset(Dataset):
